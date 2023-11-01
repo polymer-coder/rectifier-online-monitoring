@@ -10,7 +10,7 @@ import datetime
 sender_email = "stephen.garret.jogie@gmail.com"
 receiver_email = "stephen.garret.jogie@ansamcal.com"
 username = "stephen.garret.jogie@gmail.com"
-password = "lmcgecefnsgysgdp"
+password = input(f"enter password for {username}: ")
 smtp_server = "smtp.gmail.com"
 smtp_port = 465
 
