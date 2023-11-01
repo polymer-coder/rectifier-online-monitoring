@@ -4,18 +4,30 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 import requests
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 import datetime
+import xml.etree.ElementTree as ET
+
+load_dotenv()
 
 #==============================================================================
 #===========================GLOBAL VARIABLES===================================
 #==============================================================================
-sender_email = "stephen.garret.jogie@gmail.com"
-receiver_email = r"stephen.garret.jogie@ansamcal.com;simeon.ramjit@ansamcal.com"
-username = "stephen.garret.jogie@gmail.com"
-password = input(f"enter password for {username}: ")
-smtp_server = "smtp.gmail.com"
-smtp_port = 465
+sender_email = os.environ.get("SENDER_EMAIL")
+receiver_email = os.environ.get("RECEIPIENT_EMAILS")
+username = os.environ.get("MAIL_USERNAME")
+password = os.environ.get("GMAIL_APP_PASSWORD")
+
+smtp_server = os.environ.get("SMTP_SERVER")
+smtp_port = os.environ.get("SMTP_PORT")
+
+ecograph_url = os.environ.get("ECOGRAPH_URL")
+
+sixteen_load = 999
+twenty_four_load= 999
+#==============================================================================
+#===========================GLOBAL VARIABLES END===============================
+#==============================================================================
 
 class Timestamp:
     def __init__(self, unix: int, datetime: str):
@@ -55,12 +67,12 @@ def send_email(subject:str,message:str) -> None:
         print(f"Error: {e}")
     return
 
-def update_rect_values(rect : Rectifier, val_16k : float, val_24k : float) -> None:
+def update_rect_values(rect : Rectifier, val_16k : str, val_24k : str) -> None:
     temp = rect.no_load_state
-    rect.total_load = round(val_16k + val_24k,2)
+    rect.total_load = round(float(val_16k) + float(val_24k),2)
     # print(rect.total_load) # test line
-    rect.sixteen_load = round(val_16k,2)
-    rect.twenty_four_load = round(val_24k,2)
+    rect.sixteen_load = round(float(val_16k),2)
+    rect.twenty_four_load = round(float(val_24k),2)
 
     if (rect.total_load > 2.00):
         rect.no_load_state = False
@@ -93,18 +105,21 @@ def rectifier_restart_alert(rectifier : Rectifier) -> None:
 
 
 
-def test_thing() -> None:
+def ecograph_poll_check() -> None:
     rect_1 = Rectifier() 
-    update_rect_values(rect_1, 2.5,2) #test val
-    #rectifier_no_load_alert(rect_1)
-    update_rect_values(rect_1, 2.5,2.5)
-    update_rect_values(rect_1, 0.5,1)
-    update_rect_values(rect_1, 0.5,0)
-    update_rect_values(rect_1, 1.5,0.0)
-    update_rect_values(rect_1, 1.6,0.41)
-    update_rect_values(rect_1, 2.5,2)
-    #rectifier_restart_alert(rect_1)
+    x = requests.get(ecograph_url)
+    tree = ET.fromstring(x.text)
+
+    twenty_four_load = tree[8][0].text # 24kA Load Value
+    sixteen_load =  tree[9][0].text # 16kA Load Value
+    update_rect_values(rect_1, sixteen_load, twenty_four_load) #test val
+
     
     return
 
-test_thing()
+ecograph_poll_check()
+
+
+
+""" for p in tree:
+     print(p.tag, p.attrib) """
