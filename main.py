@@ -7,6 +7,7 @@ import requests
 from dotenv import load_dotenv
 import datetime
 import xml.etree.ElementTree as ET
+from interval_timer import IntervalTimer
 
 load_dotenv()
 
@@ -41,6 +42,7 @@ class Rectifier:
         self.twenty_four_load = 0
         self.no_load_state = False #will use this to check switch between states
 
+rect_1 = Rectifier() 
 
 def get_time_from_api() -> Timestamp:
     url = r"http://worldtimeapi.org/api/timezone/America/Port_of_Spain"
@@ -67,12 +69,12 @@ def send_email(subject:str,message:str) -> None:
         print(f"Error: {e}")
     return
 
-def update_rect_values(rect : Rectifier, val_16k : str, val_24k : str) -> None:
+def update_rect_values(rect : Rectifier, val_16k : float, val_24k : float) -> None:
     temp = rect.no_load_state
-    rect.total_load = round(float(val_16k) + float(val_24k),2)
+    rect.total_load = round(val_16k + val_24k,2)
     # print(rect.total_load) # test line
-    rect.sixteen_load = round(float(val_16k),2)
-    rect.twenty_four_load = round(float(val_24k),2)
+    rect.sixteen_load = round(val_16k,2)
+    rect.twenty_four_load = round(val_24k,2)
 
     if (rect.total_load > 2.00):
         rect.no_load_state = False
@@ -106,20 +108,16 @@ def rectifier_restart_alert(rectifier : Rectifier) -> None:
 
 
 def ecograph_poll_check() -> None:
-    rect_1 = Rectifier() 
+    
     x = requests.get(ecograph_url)
     tree = ET.fromstring(x.text)
 
     twenty_four_load = tree[8][0].text # 24kA Load Value
     sixteen_load =  tree[9][0].text # 16kA Load Value
-    update_rect_values(rect_1, sixteen_load, twenty_four_load) #test val
+    update_rect_values(rect_1, float(sixteen_load), float(twenty_four_load)) #test val
 
-    
     return
 
-ecograph_poll_check()
 
-
-
-""" for p in tree:
-     print(p.tag, p.attrib) """
+for interval in IntervalTimer(1):
+    ecograph_poll_check()
