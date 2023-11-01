@@ -108,8 +108,7 @@ def rectifier_restart_alert(rectifier : Rectifier) -> None:
 
 
 
-def ecograph_poll_check() -> None:
-    counter++
+def ecograph_poll_check(counter) -> None:
     x = requests.get(ecograph_url)
     tree = ET.fromstring(x.text)
 
@@ -123,4 +122,5 @@ def ecograph_poll_check() -> None:
 
 
 for interval in IntervalTimer(1):
-    ecograph_poll_check()
+    counter+=1
+    ecograph_poll_check(counter)
