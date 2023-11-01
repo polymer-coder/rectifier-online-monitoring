@@ -60,13 +60,19 @@ def rectifier_no_load_alert(rectifier : Rectifier) -> None:
     send_email(subject, rectifier_trip_message)
     return
 
-#rectifier_trip_message = f"Rectifer No Load Condition Detected {datetime.datetime.fromtimestamp(get_time_from_api().unix_time)} \nTotal Load: {total_load}kA \n16kA Rectifier Load: {sixteen_load}kA \n24kA Rectifier Load: {twenty_four_load}kA"
-#rectifier_restart_message = f"Rectifer Restart Detected {datetime.datetime.fromtimestamp(get_time_from_api().unix_time)} \nTotal Load: {total_load}kA \n16kA Rectifier Load: {sixteen_load}kA \n24kA Rectifier Load: {twenty_four_load}kA"
+def rectifier_restart_alert(rectifier : Rectifier) -> None:
+    timestamp = datetime.datetime.fromtimestamp(get_time_from_api().unix_time)
+    rectifier_restart_message = f"Rectifer Restart Detected {timestamp} \nTotal Load: {rectifier.total_load}kA \n16kA Rectifier Load: {rectifier.sixteen_load}kA \n24kA Rectifier Load: {rectifier.twenty_four_load}kA"
+    subject = subject = f"[Rectifier Restart]- {timestamp}"
+    send_email(subject, rectifier_restart_message)
+    return
 
 def test_thing() -> None:
     rect_1 = Rectifier() 
     rect_1.total_load = 0.5 #test val
     rectifier_no_load_alert(rect_1)
+    rect_1.total_load = 2.5
+    rectifier_restart_alert(rect_1)
     return
 
 test_thing()
