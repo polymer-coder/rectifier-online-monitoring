@@ -26,6 +26,7 @@ ecograph_url = os.environ.get("ECOGRAPH_URL")
 
 sixteen_load = 999
 twenty_four_load= 999
+counter = 0
 #==============================================================================
 #===========================GLOBAL VARIABLES END===============================
 #==============================================================================
@@ -108,15 +109,17 @@ def rectifier_restart_alert(rectifier : Rectifier) -> None:
 
 
 def ecograph_poll_check() -> None:
-    
+    counter++
     x = requests.get(ecograph_url)
     tree = ET.fromstring(x.text)
 
     twenty_four_load = tree[8][0].text # 24kA Load Value
     sixteen_load =  tree[9][0].text # 16kA Load Value
-    update_rect_values(rect_1, float(sixteen_load), float(twenty_four_load)) #test val
+    print(f'{counter} - 16kA - {sixteen_load} | 24kA - {twenty_four_load}')
+    update_rect_values(rect_1, float(sixteen_load), float(twenty_four_load))
 
     return
+
 
 
 for interval in IntervalTimer(1):
