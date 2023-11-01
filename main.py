@@ -24,7 +24,7 @@ class Rectifier:
         self.total_load = 0
         self.sixteen_load = 0
         self.twenty_four_load = 0
-
+        self.no_load_state = False #will use this to check switch between states
 
 
 def get_time_from_api() -> Timestamp:
@@ -52,6 +52,26 @@ def send_email(subject:str,message:str) -> None:
         print(f"Error: {e}")
     return
 
+def update_rect_values(rect : Rectifier, total, val_16k, val_24k) -> None:
+    temp = rect.no_load_state
+    rect.total_load = total
+    rect.sixteen_load = val_16k
+    rect.twenty_four_load = val_24k
+
+    if (rect.total_load > 2.00):
+        rect.no_load_state = False
+    else:
+        if (rect.total_load < 1.00):
+            rect.no_load_state = True
+    
+    if(rect.no_load_state != temp):
+        #This is a change in state and would warrant an email alert
+        if (rect.no_load_state == True):
+            rectifier_no_load_alert(rect)
+        else:
+            rectifier_restart_alert(rect)
+
+    return
 
 def rectifier_no_load_alert(rectifier : Rectifier) -> None:
     timestamp = datetime.datetime.fromtimestamp(get_time_from_api().unix_time)
@@ -67,12 +87,20 @@ def rectifier_restart_alert(rectifier : Rectifier) -> None:
     send_email(subject, rectifier_restart_message)
     return
 
+
+
 def test_thing() -> None:
     rect_1 = Rectifier() 
-    rect_1.total_load = 0.5 #test val
-    rectifier_no_load_alert(rect_1)
-    rect_1.total_load = 2.5
-    rectifier_restart_alert(rect_1)
+    update_rect_values(rect_1, 4.5, 2.5,2) #test val
+    #rectifier_no_load_alert(rect_1)
+    update_rect_values(rect_1, 5, 2.5,2)
+    update_rect_values(rect_1, 1.5, 2.5,2)
+    update_rect_values(rect_1, 0.99, 2.5,2)
+    update_rect_values(rect_1, 1.5, 2.5,2)
+    update_rect_values(rect_1, 2.01, 2.5,2)
+    update_rect_values(rect_1, 4.5, 2.5,2)
+    #rectifier_restart_alert(rect_1)
+    
     return
 
 test_thing()
