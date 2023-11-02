@@ -9,6 +9,29 @@ import datetime
 import xml.etree.ElementTree as ET
 from interval_timer import IntervalTimer
 
+#TODO: 
+# 1. Log the readings to a database (firebase firestore)
+#       -> Table with cols for the following:
+#           --> Timestamp (primary key)
+#           --> 16kA load value
+#           --> 24kA load value
+#           --> total load value
+#           --> 251 (brine feed flow rate) (m^3 per hour)
+#           --> 223 (Chlorine header pressure)  
+#           --> Moisture Analyzer Value (Vppm)
+#
+# 2. Store a value each minute to have as a reference to include in the email alerts
+#       
+# 3. Adjust alarm logic to only email for a dropoff if sustained 45 seconds of below threshold only
+#       -> Can add an alert_prepare flag boolean value to the rectifier class
+#       -> Can also add a int value for a unix timestamp for when above flag initially raised
+#       -> When the first instance of below threshold is detected. Raise flag and log unix timestamp
+#       -> Keep checking until either the following happens:
+#           -->CASE 1: still below threshold when (current_time - logged timestamp >= 45) AND flag still raised
+#               ---> We would then send the email and reset the flag and timestamp value
+#           -->CASE 2: no longer below threshold within 45 second interval
+#               ---> We then reset the flag and timestamp without sending any email
+
 load_dotenv()
 
 #==============================================================================
