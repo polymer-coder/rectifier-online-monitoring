@@ -74,10 +74,10 @@ class Rectifier:
     def print_alert_flags(self):
         #purely for testing, can be commented out/removed later once functionality verified
         print("CURRENT TOTAL LOAD in kA : " + str(self.total_load))
-        print("NO LOAD FLAG :" + str(self.no_load_prepare_alert))
-        print("NO LOAD ASSERT TIME: " + str(self.no_load_alert_assert_time))
+        print("NO LOAD FLAG : " + str(self.no_load_prepare_alert))
+        print("NO LOAD ASSERT TIME : " + str(self.no_load_alert_assert_time))
         print("RESTART FLAG : " + str(self.restart_prepare_alert))
-        print("RESTART ASSERT TIME" + str(self.restart_alert_assert_time))
+        print("RESTART ASSERT TIME : " + str(self.restart_alert_assert_time))
         print("=====================================")
         print("=====================================")
         return
