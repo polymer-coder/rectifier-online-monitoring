@@ -269,5 +269,5 @@ def testcase_for_45_sec_alert() -> None:
 rect_1 = Rectifier() 
 for interval in IntervalTimer(1):
     counter+=1
-    rect_1.print_min_references
+    rect_1.print_min_references()
     ecograph_poll_check(rect_1, counter)
