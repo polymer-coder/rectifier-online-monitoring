@@ -4,10 +4,10 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 import requests
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 import datetime
 import xml.etree.ElementTree as ET
-#from interval_timer import IntervalTimer
+from interval_timer import IntervalTimer
 import time
 
 #TODO: 
@@ -83,6 +83,15 @@ class Rectifier:
         print("NO LOAD ASSERT TIME : " + str(self.no_load_alert_assert_time))
         print("RESTART FLAG : " + str(self.restart_prepare_alert))
         print("RESTART ASSERT TIME : " + str(self.restart_alert_assert_time))
+        print("=====================================")
+        print("=====================================")
+        return
+    
+    def print_min_references(self):
+        print("MINUTE REFERENCE TOTAL LOAD : " + str(self.min_ref_total_load))
+        print("MINUTE REFERENCE 16kA RECTIFIER LOAD : " + str(self.min_ref_sixteen_load))
+        print("MINUTE REFERENCE 24kA RECTIFIER LOAD : " + str(self.min_ref_twenty_four_load))
+        print("MIN REF TIME : " + str(self.min_ref_time))
         print("=====================================")
         print("=====================================")
         return
@@ -256,8 +265,9 @@ def testcase_for_45_sec_alert() -> None:
     rect.print_alert_flags()
     return
 
-testcase_for_45_sec_alert() 
-#rect_1 = Rectifier() 
-#for interval in IntervalTimer(1):
-#    counter+=1
-#    ecograph_poll_check(rect_1, counter)
+#testcase_for_45_sec_alert() 
+rect_1 = Rectifier() 
+for interval in IntervalTimer(1):
+    counter+=1
+    rect_1.print_min_references
+    ecograph_poll_check(rect_1, counter)
