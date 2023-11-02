@@ -120,7 +120,10 @@ def update_rect_values(rect : Rectifier, val_16k : float, val_24k : float) -> No
             and (rect.restart_alert_assert_time != 0)
             and (get_time_from_api().unix_time - rect.restart_alert_assert_time > 45)):
             #rectifier_restart_alert(rect)
+            rect.restart_prepare_alert = False
+            rect.restart_alert_assert_time = 0 #reset flags for timer so as to not spam emails 
             print("SENT RESTARTALERT")
+
         
     else:
         if (rect.total_load < 1.00):
@@ -129,6 +132,8 @@ def update_rect_values(rect : Rectifier, val_16k : float, val_24k : float) -> No
                 and (rect.no_load_alert_assert_time != 0)
                 and (get_time_from_api().unix_time - rect.no_load_alert_assert_time > 45)):
                 #rectifier_no_load_alert(rect)
+                rect.no_load_prepare_alert = False
+                rect.no_load_alert_assert_time = 0 #reset flags for timer so as to not spam emails
                 print("SENT ALERT NO LOAD")
     
     if(rect.no_load_state != temp):
@@ -152,7 +157,7 @@ def rectifier_no_load_alert(rectifier : Rectifier) -> None:
     timestamp = datetime.datetime.fromtimestamp(get_time_from_api().unix_time)
     rectifier_trip_message = f"Rectifer No Load Condition Detected {timestamp} \nTotal Load: {rectifier.total_load}kA \n16kA Rectifier Load: {rectifier.sixteen_load}kA \n24kA Rectifier Load: {rectifier.twenty_four_load}kA"
     subject = subject = f"[Rectifier No Load Condition]- {timestamp}"
-    send_email(subject, rectifier_trip_message)
+    send_email(subject, rectifier_trip_message) 
     return
 
 def rectifier_restart_alert(rectifier : Rectifier) -> None:
@@ -199,6 +204,12 @@ def testcase_for_45_sec_alert() -> None:
     update_rect_values(rect, 0, 0.94)
     rect.print_alert_flags()
     time.sleep(1)
+    update_rect_values(rect, 0, 0.94)
+    rect.print_alert_flags()
+    time.sleep(1)
+    update_rect_values(rect, 0, 0.94)
+    rect.print_alert_flags()
+    time.sleep(1)
     #Now test for restart condition
     update_rect_values(rect, 2, 0)
     time.sleep(1)
@@ -219,6 +230,9 @@ def testcase_for_45_sec_alert() -> None:
     update_rect_values(rect, 2, 0.94)
     rect.print_alert_flags()
     time.sleep(46)
+    update_rect_values(rect, 2.05, 0.94)
+    rect.print_alert_flags()
+    time.sleep(2)
     update_rect_values(rect, 2.05, 0.94)
     rect.print_alert_flags()
     return
