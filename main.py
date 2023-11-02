@@ -23,7 +23,7 @@ import time
 #           --> Moisture Analyzer Value (Vppm)
 #
 # 2. Store a value each minute to have as a reference to include in the email alerts
-#       STATUS -> Needs to be tested
+#       STATUS -> Simulated and tested to be impeccable
 #
 # 3. Adjust alarm logic to only email for a dropoff if sustained 45 seconds of below threshold only
 #       STATUS -> Implemented and tested. Appears to work for the test case seen in the test branch
@@ -36,7 +36,7 @@ import time
 #           -->CASE 2: no longer below threshold within 45 second interval
 #               ---> We then reset the flag and timestamp without sending any email
 
-#load_dotenv()
+load_dotenv()
 #==============================================================================
 #===========================GLOBAL VARIABLES===================================
 #==============================================================================
@@ -208,6 +208,23 @@ def ecograph_poll_check(rect: Rectifier, counter) -> None:
 
     return
 
+def simulated_eco_poll(rect:Rectifier,counter)-> None:
+    url = r"http://127.0.0.1:3000"
+    response = requests.get(url).text
+    response = response.split(',')
+    twenty_four_load = response[1]
+    sixteen_load = response[0]
+    if (counter%60 == 0):
+        rect.min_ref_twenty_four_load = float(twenty_four_load)
+        rect.min_ref_sixteen_load = float(sixteen_load)
+        rect.min_ref_total_load = rect.min_ref_sixteen_load + rect.min_ref_twenty_four_load
+        rect.min_ref_time = get_time_from_api().unix_time
+        counter = 0 #reset counter 
+    
+    print(f'{counter} - 16kA - {sixteen_load} | 24kA - {twenty_four_load}')
+    update_rect_values(rect, float(sixteen_load), float(twenty_four_load))
+    return
+
 def testcase_for_45_sec_alert() -> None:
     rect = Rectifier()
     update_rect_values(rect, 0, 0)
@@ -270,5 +287,7 @@ rect_1 = Rectifier()
 for interval in IntervalTimer(1):
     counter+=1
     rect_1.print_min_references()
-    ecograph_poll_check(rect_1, counter)
+    simulated_eco_poll(rect_1, counter)
+    rect_1.print_min_references()
+    rect_1.print_alert_flags()
     counter = counter%60
