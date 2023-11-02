@@ -23,8 +23,10 @@ import time
 #           --> Moisture Analyzer Value (Vppm)
 #
 # 2. Store a value each minute to have as a reference to include in the email alerts
-#       
+#       STATUS -> Needs to be tested
+#
 # 3. Adjust alarm logic to only email for a dropoff if sustained 45 seconds of below threshold only
+#       STATUS -> Implemented and tested. Appears to work for the test case seen in the test branch
 #       -> Can add an alert_prepare flag boolean value to the rectifier class
 #       -> Can also add a int value for a unix timestamp for when above flag initially raised
 #       -> When the first instance of below threshold is detected. Raise flag and log unix timestamp
@@ -48,8 +50,7 @@ smtp_port = os.environ.get("SMTP_PORT")
 
 ecograph_url = os.environ.get("ECOGRAPH_URL")
 
-sixteen_load = 999
-twenty_four_load= 999
+#min_ref_time = 0
 counter = 0
 #==============================================================================
 #===========================GLOBAL VARIABLES END===============================
@@ -70,6 +71,10 @@ class Rectifier:
         self.restart_prepare_alert = False
         self.no_load_alert_assert_time = 0 #for unix timestamp, default of 0
         self.restart_alert_assert_time = 0 
+        self.min_ref_sixteen_load = 0
+        self.min_ref_twenty_four_load= 0
+        self.min_ref_total_load = 0
+        self.min_ref_time = 0
     
     def print_alert_flags(self):
         #purely for testing, can be commented out/removed later once functionality verified
@@ -122,7 +127,7 @@ def update_rect_values(rect : Rectifier, val_16k : float, val_24k : float) -> No
             #rectifier_restart_alert(rect)
             rect.restart_prepare_alert = False
             rect.restart_alert_assert_time = 0 #reset flags for timer so as to not spam emails 
-            print("SENT RESTARTALERT")
+            print("SENT RESTAR TALERT")
 
         
     else:
@@ -155,16 +160,22 @@ def update_rect_values(rect : Rectifier, val_16k : float, val_24k : float) -> No
 
 def rectifier_no_load_alert(rectifier : Rectifier) -> None:
     timestamp = datetime.datetime.fromtimestamp(get_time_from_api().unix_time)
-    rectifier_trip_message = f"Rectifer No Load Condition Detected {timestamp} \nTotal Load: {rectifier.total_load}kA \n16kA Rectifier Load: {rectifier.sixteen_load}kA \n24kA Rectifier Load: {rectifier.twenty_four_load}kA"
+    rectifier_trip_message = f"Rectifer No Load Condition Detected {timestamp} \nTotal Load: {rectifier.total_load}kA \n16kA Rectifier Load: {rectifier.sixteen_load}kA \n24kA Rectifier Load: {rectifier.twenty_four_load}kA \n"
+    rectifier_trip_message = rectifier_trip_message + f"\n \n Previous Minute Stored Reading: \n \t Total Load : {rectifier.min_ref_total_load}kA"
+    rectifier_trip_message = rectifier_trip_message + f"\n \t 16kA Rectifier Load: {rectifier.min_ref_sixteen_load}kA \n \t 24kA Rectifier Load: {rectifier.min_ref_twenty_four_load}"
     subject = subject = f"[Rectifier No Load Condition]- {timestamp}"
     send_email(subject, rectifier_trip_message) 
+    #print(rectifier_trip_message)
     return
 
 def rectifier_restart_alert(rectifier : Rectifier) -> None:
     timestamp = datetime.datetime.fromtimestamp(get_time_from_api().unix_time)
-    rectifier_restart_message = f"Rectifer Restart Detected {timestamp} \nTotal Load: {rectifier.total_load}kA \n16kA Rectifier Load: {rectifier.sixteen_load}kA \n24kA Rectifier Load: {rectifier.twenty_four_load}kA"
+    rectifier_restart_message = f"Rectifer Restart Detected {timestamp} \nTotal Load: {rectifier.total_load}kA \n16kA Rectifier Load: {rectifier.sixteen_load}kA \n24kA Rectifier Load: {rectifier.twenty_four_load}kA \n"
+    rectifier_restart_message = rectifier_restart_message + f"\n \n Previous Minute Stored Reading: \n \t Total Load : {rectifier.min_ref_total_load}kA"
+    rectifier_restart_message = rectifier_restart_message + f"\n \t 16kA Rectifier Load: {rectifier.min_ref_sixteen_load}kA \n \t 24kA Rectifier Load: {rectifier.min_ref_twenty_four_load}"
     subject = subject = f"[Rectifier Restart]- {timestamp}"
     send_email(subject, rectifier_restart_message)
+    #print(rectifier_restart_message)
     return
 
 
@@ -175,6 +186,14 @@ def ecograph_poll_check(rect: Rectifier, counter) -> None:
 
     twenty_four_load = tree[8][0].text # 24kA Load Value
     sixteen_load =  tree[9][0].text # 16kA Load Value
+
+    if (counter%60 == 0):
+        rect.min_ref_twenty_four_load = float(twenty_four_load)
+        rect.min_ref_sixteen_load = float(sixteen_load)
+        rect.min_ref_total_load = rect.min_ref_sixteen_load + rect.min_ref_twenty_four_load
+        rect.min_ref_time = get_time_from_api().unix_time
+        counter = 0 #reset counter 
+    
     print(f'{counter} - 16kA - {sixteen_load} | 24kA - {twenty_four_load}')
     update_rect_values(rect, float(sixteen_load), float(twenty_four_load))
 
