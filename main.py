@@ -271,4 +271,4 @@ for interval in IntervalTimer(1):
     counter+=1
     rect_1.print_min_references()
     ecograph_poll_check(rect_1, counter)
-    if (counter%60 == 0)
+    counter = counter%60
