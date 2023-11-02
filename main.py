@@ -133,10 +133,10 @@ def update_rect_values(rect : Rectifier, val_16k : float, val_24k : float) -> No
         if ((rect.restart_prepare_alert == True) 
             and (rect.restart_alert_assert_time != 0)
             and (get_time_from_api().unix_time - rect.restart_alert_assert_time > 45)):
-            #rectifier_restart_alert(rect)
+            rectifier_restart_alert(rect)
             rect.restart_prepare_alert = False
             rect.restart_alert_assert_time = 0 #reset flags for timer so as to not spam emails 
-            print("SENT RESTAR TALERT")
+            print("SENT RESTART ALERT")
 
         
     else:
@@ -145,7 +145,7 @@ def update_rect_values(rect : Rectifier, val_16k : float, val_24k : float) -> No
             if ((rect.no_load_prepare_alert == True) 
                 and (rect.no_load_alert_assert_time != 0)
                 and (get_time_from_api().unix_time - rect.no_load_alert_assert_time > 45)):
-                #rectifier_no_load_alert(rect)
+                rectifier_no_load_alert(rect)
                 rect.no_load_prepare_alert = False
                 rect.no_load_alert_assert_time = 0 #reset flags for timer so as to not spam emails
                 print("SENT ALERT NO LOAD")
@@ -271,3 +271,4 @@ for interval in IntervalTimer(1):
     counter+=1
     rect_1.print_min_references()
     ecograph_poll_check(rect_1, counter)
+    if (counter%60 == 0)
