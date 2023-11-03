@@ -9,7 +9,9 @@ import datetime
 import xml.etree.ElementTree as ET
 from interval_timer import IntervalTimer
 import time
-
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
 #TODO: 
 # 1. Log the readings to a database (firebase firestore) 
 #       -> Need to use the server side time stamp for fire store
@@ -52,6 +54,18 @@ ecograph_url = os.environ.get("ECOGRAPH_URL")
 
 #min_ref_time = 0
 counter = 0
+
+# A dictionary to be used for the document entry into the firestore database
+sample_data = {
+    "TimeStamp" : firestore.SERVER_TIMESTAMP,
+    "sixteen_rectifier_load" : 0,
+    "twenty_four_rectifier_load" : 0,
+    "total_rectifier_load" : 0,
+    "brine_feed_flow_rate" : 0,
+    "chlorine_head_pressure" : 0,
+    "chlorine_moisture_value" : 0
+}
+
 #==============================================================================
 #===========================GLOBAL VARIABLES END===============================
 #==============================================================================
@@ -192,18 +206,28 @@ def rectifier_restart_alert(rectifier : Rectifier) -> None:
 
 
 
-def ecograph_poll_check(rect: Rectifier, counter) -> None:
+def ecograph_poll_check(rect: Rectifier, counter, db) -> None:
     x = requests.get(ecograph_url)
     tree = ET.fromstring(x.text)
-
-    twenty_four_load = tree[8][0].text # 24kA Load Value
-    sixteen_load =  tree[9][0].text # 16kA Load Value
+    twenty_four_load = round(float(tree[8][0].text),2) # 24kA Load Value
+    sixteen_load =  round(float(tree[9][0].text),2) # 16kA Load Value
 
     if (counter%60 == 0):
-        rect.min_ref_twenty_four_load = round(float(twenty_four_load),2)
-        rect.min_ref_sixteen_load = round(float(sixteen_load),2)
+        rect.min_ref_twenty_four_load = twenty_four_load
+        rect.min_ref_sixteen_load =sixteen_load
         rect.min_ref_total_load = round(rect.min_ref_sixteen_load + rect.min_ref_twenty_four_load,2)
         rect.min_ref_time = get_time_from_api().unix_time
+        pi_233 = round(float(tree[14][0].text),2)
+        fi_251 = round(float(tree[16][0].text),2)
+        moisture_analyzer = round(float(tree[17][0].text),2)
+        sample_data.update({
+            "sixteen_rectifier_load" : sixteen_load,
+            "twenty_four_rectifier_load" : twenty_four_load,
+            "total_rectifier_load" : (sixteen_load+twenty_four_load),
+            "brine_feed_flow_rate" : fi_251,
+            "chlorine_head_pressure" : pi_233,
+            "chlorine_moisture_value" : moisture_analyzer})
+        db.collection("Data Samples").add(sample_data)
         counter = 0 #reset counter 
     
     print(f'{counter} - 16kA - {sixteen_load} | 24kA - {twenty_four_load}')
@@ -286,12 +310,17 @@ def testcase_for_45_sec_alert() -> None:
     return
 
 #testcase_for_45_sec_alert() 
+
 rect_1 = Rectifier() 
+cred = credentials.Certificate('serviceAccount.json')
+app = firebase_admin.initialize_app(cred)
+db = firestore.client()
 for interval in IntervalTimer(1):
     counter+=1
     rect_1.print_min_references()
-    ecograph_poll_check(rect_1, counter)
+    ecograph_poll_check(rect_1, counter,db)
     #simulated_eco_poll(rect_1,counter)
     #rect_1.print_min_references()
     #rect_1.print_alert_flags()
     counter = counter%60
+
