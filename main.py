@@ -9,7 +9,16 @@ import datetime
 import xml.etree.ElementTree as ET
 from interval_timer import IntervalTimer
 import time
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
 
+# Use a service account.
+cred = credentials.Certificate('serviceAccount.json')
+
+app = firebase_admin.initialize_app(cred)
+
+db = firestore.client()
 #TODO: 
 # 1. Log the readings to a database (firebase firestore) 
 #       -> Need to use the server side time stamp for fire store
