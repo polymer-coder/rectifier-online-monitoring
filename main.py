@@ -154,16 +154,19 @@ def update_rect_values(rect : Rectifier, val_16k : float, val_24k : float) -> No
         #This is a change in state and would warrant a flag being raised
         if (rect.no_load_state == True):
             #rectifier_no_load_alert(rect)
-            rect.no_load_prepare_alert = True
-            rect.no_load_alert_assert_time = get_time_from_api().unix_time
+            #NOTE : To deal with the edge case discussed. Minor change here to quickly fix issue
+            # Basically, only assert the prepare alert flag when the other prepare alert flag is not asserted
+            # This would get rid of the sub 45 second state change during stead state resulting in 'erroneous' emails
+            rect.no_load_prepare_alert = not(rect.restart_prepare_alert) #this solves our problems in life
+            rect.no_load_alert_assert_time = ((get_time_from_api().unix_time)*rect.no_load_prepare_alert)
             rect.restart_alert_assert_time = 0 #to reset flag in case
             rect.restart_prepare_alert = False
         else:
             #rectifier_restart_alert(rect)
+            rect.restart_prepare_alert = not(rect.no_load_prepare_alert)
+            rect.restart_alert_assert_time = ((get_time_from_api().unix_time)*rect.restart_prepare_alert)
             rect.no_load_prepare_alert = False
             rect.no_load_alert_assert_time = 0
-            rect.restart_prepare_alert = True
-            rect.restart_alert_assert_time = get_time_from_api().unix_time
 
     return
 
@@ -197,9 +200,9 @@ def ecograph_poll_check(rect: Rectifier, counter) -> None:
     sixteen_load =  tree[9][0].text # 16kA Load Value
 
     if (counter%60 == 0):
-        rect.min_ref_twenty_four_load = float(twenty_four_load)
-        rect.min_ref_sixteen_load = float(sixteen_load)
-        rect.min_ref_total_load = rect.min_ref_sixteen_load + rect.min_ref_twenty_four_load
+        rect.min_ref_twenty_four_load = round(float(twenty_four_load),2)
+        rect.min_ref_sixteen_load = round(float(sixteen_load),2)
+        rect.min_ref_total_load = round(rect.min_ref_sixteen_load + rect.min_ref_twenty_four_load,2)
         rect.min_ref_time = get_time_from_api().unix_time
         counter = 0 #reset counter 
     
