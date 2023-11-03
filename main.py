@@ -291,6 +291,7 @@ for interval in IntervalTimer(1):
     counter+=1
     rect_1.print_min_references()
     ecograph_poll_check(rect_1, counter)
+    #simulated_eco_poll(rect_1,counter)
     #rect_1.print_min_references()
     #rect_1.print_alert_flags()
     counter = counter%60
