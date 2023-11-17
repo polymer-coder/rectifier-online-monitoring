@@ -185,7 +185,7 @@ def update_rect_values(rect : Rectifier, val_16k : float, val_24k : float) -> No
     return
 
 def rectifier_no_load_alert(rectifier : Rectifier) -> None:
-    timestamp = datetime.datetime.fromtimestamp(get_time_from_api().unix_time)
+    timestamp = str(datetime.datetime.fromtimestamp(get_time_from_api().unix_time,datetime.timezone(datetime.timedelta(hours=-4)))).replace('-04:00', '  (UTC -4)')
     rectifier_trip_message = f"Rectifer No Load Condition Detected {timestamp} \nTotal Load: {rectifier.total_load}kA \n16kA Rectifier Load: {rectifier.sixteen_load}kA \n24kA Rectifier Load: {rectifier.twenty_four_load}kA \n"
     rectifier_trip_message = rectifier_trip_message + f"\n \n Previous Minute Stored Reading: \n \t Total Load : {rectifier.min_ref_total_load}kA"
     rectifier_trip_message = rectifier_trip_message + f"\n \t 16kA Rectifier Load: {rectifier.min_ref_sixteen_load}kA \n \t 24kA Rectifier Load: {rectifier.min_ref_twenty_four_load}"
@@ -195,7 +195,7 @@ def rectifier_no_load_alert(rectifier : Rectifier) -> None:
     return
 
 def rectifier_restart_alert(rectifier : Rectifier) -> None:
-    timestamp = datetime.datetime.fromtimestamp(get_time_from_api().unix_time)
+    timestamp = str(datetime.datetime.fromtimestamp(get_time_from_api().unix_time,datetime.timezone(datetime.timedelta(hours=-4)))).replace('-04:00', '  (UTC -4)')
     rectifier_restart_message = f"Rectifer Restart Detected {timestamp} \nTotal Load: {rectifier.total_load}kA \n16kA Rectifier Load: {rectifier.sixteen_load}kA \n24kA Rectifier Load: {rectifier.twenty_four_load}kA \n"
     rectifier_restart_message = rectifier_restart_message + f"\n \n Previous Minute Stored Reading: \n \t Total Load : {rectifier.min_ref_total_load}kA"
     rectifier_restart_message = rectifier_restart_message + f"\n \t 16kA Rectifier Load: {rectifier.min_ref_sixteen_load}kA \n \t 24kA Rectifier Load: {rectifier.min_ref_twenty_four_load}"
