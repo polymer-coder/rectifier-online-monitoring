@@ -43,7 +43,7 @@ load_dotenv()
 #===========================GLOBAL VARIABLES===================================
 #==============================================================================
 sender_email = os.environ.get("SENDER_EMAIL")
-receiver_email = os.environ.get("RECEIPIENT_EMAILS")
+receiver_email = os.environ.get("RECIPIENT_EMAILS")
 username = os.environ.get("MAIL_USERNAME")
 password = os.environ.get("GMAIL_APP_PASSWORD")
 
@@ -217,9 +217,9 @@ def ecograph_poll_check(rect: Rectifier, counter, db) -> None:
         rect.min_ref_sixteen_load =sixteen_load
         rect.min_ref_total_load = round(rect.min_ref_sixteen_load + rect.min_ref_twenty_four_load,2)
         rect.min_ref_time = get_time_from_api().unix_time
-        pi_233 = round(float(tree[14][0].text),2)
-        fi_251 = round(float(tree[16][0].text),2)
-        moisture_analyzer = round(float(tree[17][0].text),2)
+        pi_233 = round(float(tree[10][0].text),2)
+        fi_251 = round(float(tree[11][0].text),2)
+        moisture_analyzer = round(float(tree[12][0].text),2)
         sample_data.update({
             "sixteen_rectifier_load" : sixteen_load,
             "twenty_four_rectifier_load" : twenty_four_load,
@@ -318,9 +318,9 @@ db = firestore.client()
 for interval in IntervalTimer(1):
     counter+=1
     rect_1.print_min_references()
-    ecograph_poll_check(rect_1, counter,db)
-    #simulated_eco_poll(rect_1,counter)
+    #ecograph_poll_check(rect_1, counter,db)
+    simulated_eco_poll(rect_1,counter)
     #rect_1.print_min_references()
-    #rect_1.print_alert_flags()
+    rect_1.print_alert_flags()
     counter = counter%60
 
